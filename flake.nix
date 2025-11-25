@@ -22,7 +22,6 @@
             packages = [
               pkgs.python3
               pkgs.uv
-              pkgs.ollama
             ];
 
             env = lib.optionalAttrs pkgs.stdenv.isLinux {
