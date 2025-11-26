@@ -15,6 +15,7 @@ from hdf5_convert import setname, outdir as indir
 SETIN = indir / "*.parquet"
 DIROUT = Path(__file__).resolve().parent / "data" / f"processed_{setname}"
 DIROUT.mkdir(exist_ok = True, parents = True)
+OUTTRSF = DIROUT / "trs.parquet"
 
 
 def unique_tickers(setfl):
@@ -79,10 +80,23 @@ def trs_dv(inp, outp):
             (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
         ) 
         # add price x volumen column
-        .with_columns((pl.col("Volume") * pl.col("price")).alias("dolvlm"))
+        .with_columns((pl.col("Volume") * pl.col("Price")).alias("dolvlm"))
         # lazy stream materialize and save to disk
         .sink_parquet(outp, compression = "zstd")
     )
+
+def barmake(inp, field, thresh):
+    # make smallest bars that `field` sum of each bar is at least thresh
+    # inp: input parquet file or dataset location
+    # field: string field name to tqarget
+    # thresh: threshold sum where we finish the bar. >=. 
+    cs = np.cumsum(pl.scan_parquet(imp).select(field).collect()).astype(np.float32)
+    ts = np.arange(0, len(cs), thresh) # thresh steps [0, thresh, thresh*2, thresh*3....]
+    idx = np.searchsorted(cs, ts, side = "left") # locations where cumsum >= thresh
+    # TODO CHECK IF BELOW WORKS OFF BY ONE ETC ETC OR GAPS BY 1 ERRORS
+    mask = np.repeat(np.array(1, len(idx) + 1, np.diff(idx))) # [111122223333333...] for bar group bys
+
+
 
 
 if __name__ == "__main__":
@@ -94,7 +108,7 @@ if __name__ == "__main__":
     logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
 
     nowtime = dt.datetime.now()
-    trs_dv(SETIN, DIROUT / "trs.parquet")
+    trs_dv(SETIN, OUTTRSF)
     logger.info(f"trs_dv time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
     IPython.embed()
 

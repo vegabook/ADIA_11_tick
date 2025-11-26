@@ -7,10 +7,13 @@ import pyarrow.parquet as pq
 from pathlib import Path
 from loguru import logger
 
-infile = Path("./data/hdf5/ES.h5")
+# directory constants
+inH5dir = Path("./data/hdf5/ES.h5")
+inH5file = indir / "ES.h5"
 setname = "trades" # "trades_filter0vol" or "trades"
 outdir = Path("./data/rawinput") / setname
 outdir.mkdir(exist_ok = True, parents = True)
+
 
 def convert():
     with h5py.File("./data/hdf5/ES.h5", "r") as f:

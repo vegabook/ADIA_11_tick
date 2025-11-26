@@ -1,5 +1,8 @@
 ## Adia tick processing
 
+### *MEMORY USAGE*
+This project uses memory mapped arrays extensively. It has been tested on Linux and MacOS with 16GB of RAM (much smaller than data file and intermediates), but will swap up to 32 gigabytes. 
+
 ### Usage or Nix/NixOS
 Clone repo  
 `cd adia`  
@@ -14,11 +17,12 @@ install [ollama](https://ollama.com/download/linux)
 `uv run main.py`  
 
 ### Data prep
-Project expects to fine exercise data file as `./data/hdf5/ES.h5`
+Project expects to find exercise data file as `./data/hdf5/ES.h5`
 
 ### Explanation
 * `hdf5_convert.py`
-    * Converts HDF5 dataset to a parquet dataset. This is necessary to use full power of `polars` [larger-than-memory](https://docs.pola.rs/api/python/dev/reference/api/polars.scan_parquet.html) capabilities. 
+    * `convert()`
+        * Converts HDF5 dataset to a parquet dataset. This is necessary to use full power of `polars` [larger-than-memory](https://docs.pola.rs/api/python/dev/reference/api/polars.scan_parquet.html) capabilities. 
 * `main.py`
     * `trs_dv`
         * Ensures that there are no time overlaps between contract names
