@@ -9,7 +9,6 @@ from pathlib import Path
 from rich.console import Console; console = Console()
 from pprint import pprint
 import IPython
-IPython.embed
 import datetime as dt
 
 from hdf5_convert import setname, outdir as indir
@@ -31,44 +30,27 @@ def columns(setfl):
     return pl.read_parquet_schema(setfl)
 
 
+def time_ranges(inp):
+    """ First and last timestamp for each Instrument.
+    Also akes sure there is no time range overlap so 
+    that trs can be performed. 
+    """
+    ee = (
+            pl.scan_parquet(inp, low_memory= True)
+            .group_by("Instrument")
+            .agg([pl.col("Time").min().alias("first_time"), 
+                  pl.col("Time").max().alias("last_time")])
+            .sort("last_time")
+            .collect()
+        )
+    assert all(ee["last_time"][:-1] < ee["first_time"][1:])
+    return ee
+
+
 def trs(inp, outp):
     """ Makes a total return series from all the prices in each contract.
     Uses polars lazy scans and is therefore able to operate on data sets bigger than memory.
-    Algo: sort over instrument, time, group over instrument, take percentage returns
-          make first nulls zero, cum_prod (returns+1), multiply by first price 
-          in entire set.
-    inp: string input file(s) 
-    outp: string output file location
-    """
-    (
-        pl.scan_parquet(inp, low_memory = True)
-        .sort(["Instrument", "Time"])
-        .with_columns(
-            pl.col("Price")
-                .pct_change()
-                .over("Instrument")
-                .fill_null(0)
-                .alias("pct_change")
-        )
-        .sink_parquet(str(outp).replace(".parquet", "_inter1.parquet"))
-        .sort(["Time"])
-        .with_columns(
-            (pl.col("pct_change") + 1)
-            .cum_prod()
-            .alias("pct_cumprod")
-        )
-        .sink_parquet(str(outp).replace(".parquet", "_inter2.parquet"))
-        .with_columns(
-            (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
-        )
-        .sink_parquet(outp, compression = "zstd")
-    )
-
-
-def trs2(inp, outp):
-    """ Makes a total return series from all the prices in each contract.
-    Uses polars lazy scans and is therefore able to operate on data sets bigger than memory.
-    Algo: sort over instrument, time, group over instrument, take percentage returns
+    Algo: sort over time, group over instrument ('over'), take percentage returns
           make first nulls zero, cum_prod (returns+1), multiply by first price 
           in entire set.
     inp: string input file(s) 
@@ -80,41 +62,7 @@ def trs2(inp, outp):
         .with_columns(
             pl.col("Price")
                 .pct_change()
-                .over("Instrument")
-                .fill_null(0)
-                .alias("pct_change")
-        )
-        .sink_parquet(str(outp).replace(".parquet", "_inter1.parquet"))
-        .sort(["Time"])
-        .with_columns(
-            (pl.col("pct_change") + 1)
-            .cum_prod()
-            .alias("pct_cumprod")
-        )
-        .sink_parquet(str(outp).replace(".parquet", "_inter2.parquet"))
-        .with_columns(
-            (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
-        )
-        .sink_parquet(outp, compression = "zstd")
-    )
-    
-
-def trs3(inp, outp):
-    """ Makes a total return series from all the prices in each contract.
-    Uses polars lazy scans and is therefore able to operate on data sets bigger than memory.
-    Algo: sort over instrument, time, group over instrument, take percentage returns
-          make first nulls zero, cum_prod (returns+1), multiply by first price 
-          in entire set.
-    inp: string input file(s) 
-    outp: string output file location
-    """
-    (
-        pl.scan_parquet(inp, low_memory = True)
-        .sort(["Time"])
-        .with_columns(
-            pl.col("Price")
-                .pct_change()
-                .over("Instrument")
+                .over("Instrument", mapping_strategy  = "group_to_rows")
                 .fill_null(0)
                 .alias("pct_change")
         )
@@ -134,14 +82,16 @@ if __name__ == "__main__":
     #ut = unique_tickers()
     #pprint(ut)
     #pprint(f"Count: {len(ut)}")
-    print(columns(SETIN))
     nowtime = dt.datetime.now()
-    logger.info(f"time taken test: {(dt.datetime.now() - nowtime).total_seconds()}")
-    #nowtime = dt.datetime.now()
-    #trs(SETIN, DIROUT / "trs.parquet")
-    #logger.info(f"time taken trs: {(dt.datetime.now() - nowtime).total_seconds()}")
+    ee = time_ranges(SETIN)
+    logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+
     nowtime = dt.datetime.now()
-    trs2(SETIN, DIROUT / "trs2.parquet")
-    logger.info(f"time taken trs2: {(dt.datetime.now() - nowtime).total_seconds()}")
+    trs(SETIN, DIROUT / "trs.parquet")
+    logger.info(f"trs time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+    IPython.embed()
+
+
+
     
 
