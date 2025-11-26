@@ -21,3 +21,8 @@ dependencies = [
     "transformers>=4.57.1",
 ]
 
+[tool.uv.workspace]
+members = [
+    "data/parquet_pct",
+]
+
