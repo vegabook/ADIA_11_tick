@@ -105,6 +105,7 @@ if __name__ == "__main__":
     #pprint(f"Count: {len(ut)}")
     nowtime = dt.datetime.now()
     ee = time_ranges(SETIN)
+    # make sure no time period overlaps
     logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
 
     nowtime = dt.datetime.now()
