@@ -1,7 +1,7 @@
 # --------------------- ADIA Question 11 Tick Data -------------------------------
 # ------------- main parquet disk based lazy analysis routines -------------------
 # --------------------------------------------------------------------------------
-# colorscheme lackluster-dark
+# colorscheme lackluster-hack
 
 import polars as pl
 from loguru import logger
@@ -50,12 +50,14 @@ def trs(inp, outp):
                 .fill_null(0)
                 .alias("pct_change")
         )
+        .sink_parquet(str(outp).replace(".parquet", "_inter1.parquet"))
         .sort(["Time"])
         .with_columns(
             (pl.col("pct_change") + 1)
             .cum_prod()
             .alias("pct_cumprod")
         )
+        .sink_parquet(str(outp).replace(".parquet", "_inter2.parquet"))
         .with_columns(
             (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
         )
@@ -82,12 +84,14 @@ def trs2(inp, outp):
                 .fill_null(0)
                 .alias("pct_change")
         )
+        .sink_parquet(str(outp).replace(".parquet", "_inter1.parquet"))
         .sort(["Time"])
         .with_columns(
             (pl.col("pct_change") + 1)
             .cum_prod()
             .alias("pct_cumprod")
         )
+        .sink_parquet(str(outp).replace(".parquet", "_inter2.parquet"))
         .with_columns(
             (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
         )
@@ -133,14 +137,11 @@ if __name__ == "__main__":
     print(columns(SETIN))
     nowtime = dt.datetime.now()
     logger.info(f"time taken test: {(dt.datetime.now() - nowtime).total_seconds()}")
-    nowtime = dt.datetime.now()
-    trs(SETIN, DIROUT / "trs.parquet")
-    logger.info(f"time taken trs: {(dt.datetime.now() - nowtime).total_seconds()}")
+    #nowtime = dt.datetime.now()
+    #trs(SETIN, DIROUT / "trs.parquet")
+    #logger.info(f"time taken trs: {(dt.datetime.now() - nowtime).total_seconds()}")
     nowtime = dt.datetime.now()
     trs2(SETIN, DIROUT / "trs2.parquet")
     logger.info(f"time taken trs2: {(dt.datetime.now() - nowtime).total_seconds()}")
-    nowtime = dt.datetime.now()
-    trs3(SETIN, DIROUT / "trs3.parquet")
-    logger.info(f"time taken trs3: {(dt.datetime.now() - nowtime).total_seconds()}")
     
 

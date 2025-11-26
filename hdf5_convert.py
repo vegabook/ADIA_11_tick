@@ -4,8 +4,6 @@
 import h5py
 import pyarrow as pa
 import pyarrow.parquet as pq
-import pyarrow.dataset as ds # for proper chunking
-import numpy as np
 from pathlib import Path
 from loguru import logger
 
@@ -34,7 +32,7 @@ def convert():
             .sort_by([("Time", "ascending")])
             
             pq.write_table(table, outdir / f"es_{iout:04d}.parquet")
-            print(f"Wrote part {iout} – rows {start}–{start+len(data)}")
+            logger.info(f"Wrote part {iout} – rows {start}–{start+len(data)}")
 
 
 if __name__ == "__main__":
