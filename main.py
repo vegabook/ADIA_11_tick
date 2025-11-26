@@ -47,12 +47,13 @@ def time_ranges(inp):
     return ee
 
 
-def trs(inp, outp):
+def trs_dv(inp, outp):
     """ Makes a total return series from all the prices in each contract.
     Uses polars lazy scans and is therefore able to operate on data sets bigger than memory.
     Algo: sort over time, group over instrument ('over'), take percentage returns
           make first nulls zero, cum_prod (returns+1), multiply by first price 
           in entire set.
+    Also will add Volume x Price series dolvlm
     inp: string input file(s) 
     outp: string output file location
     """
@@ -63,17 +64,23 @@ def trs(inp, outp):
             pl.col("Price")
                 .pct_change()
                 .over("Instrument", mapping_strategy  = "group_to_rows")
+                # nulls between instruments to zero pct_change
                 .fill_null(0)
                 .alias("pct_change")
         )
+        # back to series from pct returns
         .with_columns(
             (pl.col("pct_change") + 1)
             .cum_prod()
             .alias("pct_cumprod")
         )
+        # multiple by first price
         .with_columns(
             (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
-        )
+        ) 
+        # add price x volumen column
+        .with_columns((pl.col("Volume") * pl.col("price")).alias("dolvlm"))
+        # lazy stream materialize and save to disk
         .sink_parquet(outp, compression = "zstd")
     )
 
@@ -87,8 +94,8 @@ if __name__ == "__main__":
     logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
 
     nowtime = dt.datetime.now()
-    trs(SETIN, DIROUT / "trs.parquet")
-    logger.info(f"trs time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+    trs_dv(SETIN, DIROUT / "trs.parquet")
+    logger.info(f"trs_dv time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
     IPython.embed()
 
 

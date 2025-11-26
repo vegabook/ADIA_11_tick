@@ -13,11 +13,10 @@ outdir = Path("./data/rawinput") / setname
 outdir.mkdir(exist_ok = True, parents = True)
 
 def convert():
-
     with h5py.File("./data/hdf5/ES.h5", "r") as f:
         dset = f["tick"][setname]
         n_rows = dset.shape[0]
-        chunk = 10_000_000
+        chunk = int(10e6)
         print(f"total rows are {n_rows}, total chunks are {n_rows / chunk}")
 
         for iout, start in enumerate(range(0, n_rows, chunk)):
