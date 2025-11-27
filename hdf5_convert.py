@@ -8,19 +8,19 @@ from pathlib import Path
 from loguru import logger
 
 # directory constants
-inH5dir = Path("./data/hdf5/ES.h5")
+inH5dir = Path("./data/hdf5")
 inH5file = inH5dir / "ES.h5"
-setname = "trades_filter0vol" # "trades_filter0vol" or "trades"
+setname = "trades" # "trades_filter0vol" or "trades"
 outdir = Path("./data/rawinput") / setname
 outdir.mkdir(exist_ok = True, parents = True)
 
 
-def convert():
-    with h5py.File("./data/hdf5/ES.h5", "r") as f:
+def convert(h5file):
+    with h5py.File(h5file, "r") as f:
         dset = f["tick"][setname]
         n_rows = dset.shape[0]
         chunk = int(10e6)
-        print(f"total rows are {n_rows}, total chunks are {n_rows / chunk}")
+        logger.info(f"total rows are {n_rows}, total chunks are {n_rows / chunk}")
 
         for iout, start in enumerate(range(0, n_rows, chunk)):
             data = dset[start:start + chunk]
@@ -38,4 +38,7 @@ def convert():
 
 
 if __name__ == "__main__":
-    convert()
+    if not inH5file.exists():
+        logger.error(f"Cannot find {inH5file}")
+    else:
+        convert(inH5file)
