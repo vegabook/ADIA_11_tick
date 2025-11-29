@@ -11,8 +11,10 @@ from pprint import pprint
 import IPython
 import datetime as dt
 
-from hdf5_convert import setname, outdir as indir
-SETIN = indir / "*.parquet"
+from hdf5_convert import outdir as indir
+#setname = "trades" 
+setname = "trades_filter0vol"
+SETIN = indir / setname / "*.parquet"
 DIROUT = Path(__file__).resolve().parent / "data" / "processed_trades" 
 DIROUT.mkdir(exist_ok = True, parents = True)
 OUTTRSF = DIROUT / f"{setname}.parquet"

@@ -10,13 +10,11 @@ from loguru import logger
 # directory constants
 inH5dir = Path("./data/hdf5")
 inH5file = inH5dir / "ES.h5"
-#setname = "trades" # "trades_filter0vol" or "trades"
-setname = "trades_filter0vol"
-outdir = Path("./data/rawinput") / setname
-outdir.mkdir(exist_ok = True, parents = True)
+#setname = "trades_filter0vol"
+outdir = Path("./data/rawinput")
 
 
-def convert(h5file):
+def convert(h5file, outpth):
     with h5py.File(h5file, "r") as f:
         dset = f["tick"][setname]
         n_rows = dset.shape[0]
@@ -34,7 +32,7 @@ def convert(h5file):
             ], names=["Instrument", "Price", "Time", "Volume"])\
             .sort_by([("Time", "ascending")])
             
-            pq.write_table(table, outdir / f"es_{iout:04d}.parquet")
+            pq.write_table(table, outpath / f"es_{iout:04d}.parquet")
             logger.info(f"Wrote part {iout} – rows {start}–{start+len(data)}")
 
 
@@ -42,4 +40,7 @@ if __name__ == "__main__":
     if not inH5file.exists():
         logger.error(f"Cannot find {inH5file}")
     else:
-        convert(inH5file)
+        outdir.mkdir(exist_ok = True, parents = True)
+        convert(inH5file, outdir / "trades")
+        convert(inH5file, outdir / "trades_filter0vol")
+
