@@ -3,17 +3,19 @@
 # --------------------------------------------------------------------------------
 # colorscheme lackluster-hack
 
-import polars as pl
+import polars as pl; pl.Config(tbl_rows=50)
 from loguru import logger
 from pathlib import Path
 from rich.console import Console; console = Console()
 from pprint import pprint
 import IPython
 import datetime as dt
+import numpy as np
 
 from hdf5_convert import outdir as indir
-setname = "trades" 
-#setname = "trades_filter0vol"
+#setname = "trades" 
+setname = "trades_filter0vol"
+#setname = "trades"
 SETIN = indir / setname / "*.parquet"
 DIROUT = Path(__file__).resolve().parent / "data" / "processed_trades" 
 DIROUT.mkdir(exist_ok = True, parents = True)
@@ -47,6 +49,7 @@ def time_ranges(inp):
             .collect()
         )
     assert all(ee["last_time"][:-1] < ee["first_time"][1:])
+    logger.info("No time range overlaps detected")
     return ee
 
 
@@ -87,37 +90,63 @@ def trs_dv(inp, outp):
         .with_columns([(pl.col("Volume") * pl.col("Price")).alias("dolvlm"),
                         pl.col("Time")
                             .str.to_datetime("%Y%m%d%H%M%S%3f") # make dates
-                            .dt.timestamp("ns") # nanosecond is numpy native
+                            .dt.timestamp("ms") # nanosecond is numpy native
                             .alias("Timestamp")]) 
         .sink_parquet(outp, compression = "lz4") # lazy materialise to disk
     )
 
-def barmake(inp, field, thresh):
+def barmake(inp, field, thresh = None, timeperiod = None):
     # make smallest bars that `field` sum of each bar is at least thresh
-    # inp: input parquet file or dataset location
-    # field: string field name to tqarget
-    # thresh: threshold sum where we finish the bar. >=. 
-    cs = np.cumsum(pl.scan_parquet(imp).select(field).collect()).astype(np.float32)
-    ts = np.arange(0, len(cs), thresh) # thresh steps [0, thresh, thresh*2, thresh*3....]
-    idx = np.searchsorted(cs, ts, side = "left") # locations where cumsum >= thresh
-    # TODO CHECK IF BELOW WORKS OFF BY ONE ETC ETC OR GAPS BY 1 ERRORS
-    mask = np.repeat(np.array(1, len(idx) + 1, np.diff(idx))) # [111122223333333...] for bar group bys
-
+    # Args
+    #   inp: input parquet file or dataset location
+    #   field: string field name to tqarget
+    #   thresh: threshold sum where we finish the bar. 
+    #   timeperiod: ["1h", "1w"] etc as per Polars truncate. 
+    #               Will use thresh unless timeperiod is not None
+    assert (thresh or timeperiod)
+    if timeperiod:
+        mask = (pl.scan_parquet(inp)
+                .select("Timestamp")
+                .collect()
+                .with_columns(pl.from_epoch("Timestamp", time_unit = "ms"))["Timestamp"]
+                .dt.truncate(timeperiod))
+    else:
+        cs = np.cumsum(pl.scan_parquet(inp).select(field).collect()).astype(np.float32)
+        ts = np.arange(0, cs[-1], thresh) # thresh steps [0, thresh, thresh*2, thresh*3....]
+        idx = np.append(np.searchsorted(cs, ts, side = "left"), len(cs))
+        mask = np.repeat(np.arange(1, len(idx)), np.diff(idx))
+    bardf = (pl.scan_parquet(inp)
+            .with_columns(pl.Series("mask", mask))
+            .sort("mask", "Timestamp")
+            .group_by("mask", maintain_order = True)
+            .agg([pl.col("Timestamp").first().alias("Timestamp"),
+                  pl.col("trs").first().alias("open"),
+                  pl.col("trs").max().alias("high"),
+                  pl.col("trs").min().alias("low"),
+                  pl.col("trs").last().alias("close"),
+                  pl.col("trs").count().alias("count")]))
+    logger.info("sinking")
+    bardf.sink_parquet(f"./data/{field}_{thresh or timeperiod}_bars.parquet")
 
 
 
 if __name__ == "__main__":
-    #ut = unique_tickers()
-    #pprint(ut)
-    #pprint(f"Count: {len(ut)}")
-    nowtime = dt.datetime.now()
-    ee = time_ranges(SETIN)
     # make sure no time period overlaps
-    logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+    if timegaps_detect := False:
+        nowtime = dt.datetime.now()
+        ee = time_ranges(SETIN)
+        logger.info(f"time_ranges time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
 
-    nowtime = dt.datetime.now()
-    trs_dv(SETIN, OUTTRSF)
-    logger.info(f"trs_dv time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+    if make_trs := False:
+        nowtime = dt.datetime.now()
+        trs_dv(SETIN, OUTTRSF)
+        logger.info(f"trs_dv time taken: {(dt.datetime.now() - nowtime).total_seconds()}")
+
+    if make_bars := True:
+        barmake(DIROUT / (setname + ".parquet"), "Timestamp", timeperiod = "1h")
+        barmake(DIROUT / (setname + ".parquet"), "Volume", thresh = 10000)
+        barmake(DIROUT / (setname + ".parquet"), "dolvlm", thresh = 10000 * 1395) # 1395 = mean of price
+
     IPython.embed()
 
 
