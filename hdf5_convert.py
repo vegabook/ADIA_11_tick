@@ -10,8 +10,8 @@ from loguru import logger
 # directory constants
 inH5dir = Path("./data/hdf5")
 inH5file = inH5dir / "ES.h5"
-setname = "trades" # "trades_filter0vol" or "trades"
-#setname = "trades_filter0vol"
+#setname = "trades" # "trades_filter0vol" or "trades"
+setname = "trades_filter0vol"
 outdir = Path("./data/rawinput") / setname
 outdir.mkdir(exist_ok = True, parents = True)
 
