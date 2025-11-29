@@ -21,5 +21,6 @@ dependencies = [
 [tool.uv.workspace]
 members = [
     "data/parquet_pct",
+    "data/processed_trades",
 ]
 

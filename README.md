@@ -1,7 +1,8 @@
 ## Adia tick processing
 
 ### *MEMORY USAGE*
-This project uses memory mapped arrays extensively. It has been tested on Linux and MacOS with 16GB of RAM (much smaller than data file and intermediates), but will swap up to 32 gigabytes. 
+This project uses memory mapped arrays for larger than memory data.  
+Tested on Macbook Air 16GB RAM and NixOS 16GB RAM. On Linux requires swapfile of 96GB.  
 
 ### Usage or Nix/NixOS
 Clone repo  
@@ -13,7 +14,7 @@ Clone repo
 Clone repo  
 `cd adia`  
 install [uv](https://docs.astral.sh/uv/getting-started/installation/)  
-install [ollama](https://ollama.com/download/linux)  
+install [ollama](https://ollama.com/download/linux)  :w
 `uv run main.py`  
 
 ### Data prep
@@ -31,8 +32,8 @@ Project expects to find exercise data file as `./data/hdf5/ES.h5`
 
 ### Notes
 * Non prod, exploratory, so no type hints in interest of time. 
-* Dataset and intermediate allocations is much bigger than my Macbook Air can handle hence the memory-maped disk scan usage. Expect circa 2 orders of magnitude more speed for in-memory workflow. 
-* Documentation was googled. Grok was constulted but found to be counterproductive. No IDE-based AI was used.
+* Documentation was googled. Grok was for syntax and data types and polars functions.
+* No in-IDE ai assistant. 
 
 
 

@@ -13,9 +13,9 @@ import datetime as dt
 
 from hdf5_convert import setname, outdir as indir
 SETIN = indir / "*.parquet"
-DIROUT = Path(__file__).resolve().parent / "data" / f"processed_{setname}"
+DIROUT = Path(__file__).resolve().parent / "data" / "processed_trades" 
 DIROUT.mkdir(exist_ok = True, parents = True)
-OUTTRSF = DIROUT / "trs.parquet"
+OUTTRSF = DIROUT / f"{setname}.parquet"
 
 
 def unique_tickers(setfl):
@@ -53,10 +53,12 @@ def trs_dv(inp, outp):
     Uses polars lazy scans and is therefore able to operate on data sets bigger than memory.
     Algo: sort over time, group over instrument ('over'), take percentage returns
           make first nulls zero, cum_prod (returns+1), multiply by first price 
-          in entire set.
-    Also will add Volume x Price series dolvlm
-    inp: string input file(s) 
-    outp: string output file location
+          in entire set. 
+    Also will add Volume x Price series dolvlm, and timestamps. 
+    Args:
+        inp: string or Path input file(s) (dir or file)
+        outp: string or Path output file directory location
+    Returns: null (outputs to file)
     """
     (
         pl.scan_parquet(inp, low_memory = True)
@@ -80,9 +82,12 @@ def trs_dv(inp, outp):
             (pl.col("pct_cumprod") * pl.col("Price").first()).alias("trs")
         ) 
         # add price x volumen column
-        .with_columns((pl.col("Volume") * pl.col("Price")).alias("dolvlm"))
-        # lazy stream materialize and save to disk
-        .sink_parquet(outp, compression = "zstd")
+        .with_columns([(pl.col("Volume") * pl.col("Price")).alias("dolvlm"),
+                        pl.col("Time")
+                            .str.to_datetime("%Y%m%d%H%M%S%3f") # make dates
+                            .dt.timestamp("ns") # nanosecond is numpy native
+                            .alias("Timestamp")]) 
+        .sink_parquet(outp, compression = "lz4") # lazy materialise to disk
     )
 
 def barmake(inp, field, thresh):
