@@ -10,11 +10,10 @@ from loguru import logger
 # directory constants
 inH5dir = Path("./data/hdf5")
 inH5file = inH5dir / "ES.h5"
-#setname = "trades_filter0vol"
 outdir = Path("./data/rawinput")
 
 
-def convert(h5file, outpth):
+def convert(h5file, outpth, setname):
     with h5py.File(h5file, "r") as f:
         dset = f["tick"][setname]
         n_rows = dset.shape[0]
@@ -41,6 +40,6 @@ if __name__ == "__main__":
         logger.error(f"Cannot find {inH5file}")
     else:
         outdir.mkdir(exist_ok = True, parents = True)
-        convert(inH5file, outdir / "trades")
-        convert(inH5file, outdir / "trades_filter0vol")
+        convert(inH5file, outdir, "trades")
+        convert(inH5file, outdir, "trades_filter0vol")
 
