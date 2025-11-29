@@ -12,8 +12,8 @@ import IPython
 import datetime as dt
 
 from hdf5_convert import outdir as indir
-#setname = "trades" 
-setname = "trades_filter0vol"
+setname = "trades" 
+#setname = "trades_filter0vol"
 SETIN = indir / setname / "*.parquet"
 DIROUT = Path(__file__).resolve().parent / "data" / "processed_trades" 
 DIROUT.mkdir(exist_ok = True, parents = True)

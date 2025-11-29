@@ -18,7 +18,7 @@ install [ollama](https://ollama.com/download/linux)  :w
 `uv run main.py`  
 
 ### Data prep
-Project expects to find exercise data file as `./data/hdf5/ES.h5`
+Project expects to find exercise data file as `./data/ES.h5`
 
 ### Explanation
 * `hdf5_convert.py`
