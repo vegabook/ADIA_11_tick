@@ -9,9 +9,12 @@ Clone repo or unzip
 `cd ADIA_11_tick`  
 either: install [uv](https://docs.astral.sh/uv/getting-started/installation/) or on nix[os], `nix develop`
 ensure ES.h5 is in the `<project_root>/data/hdf5` directory  
-convert to parquet: `uv run hdf5_convert.py`  
-make bars: `uv run barmake.py`  
-answer questions: `uv run qa.py`  
+either:  
+* convert to parquet: `uv run hdf5_convert.py`  
+* make bars: `uv run barmake.py`  
+* answer questions: `uv run qa.py`  
+or:  
+`./runall.sh` (might need to `chmod +x runall.sh` first)
 
 ### Data prep
 Project expects to find exercise data file as `./data/ES.h5`
