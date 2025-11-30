@@ -7,6 +7,7 @@ import numpy as np
 import IPython
 from scipy.stats import jarque_bera
 import matplotlib.pyplot as plt
+from pprint import pprint
 
 
 # hourly bars
@@ -44,7 +45,7 @@ def c_weeklycount():
 
 def c_plotcounts(counts):
     imagedir = Path(__file__).resolve().parent / "images"
-    imagedir.mkdir(exists_ok = True)
+    imagedir.mkdir(exist_ok = True)
     plt.switch_backend("Agg")
     for n, df in counts.items():
         df.to_pandas().plot(x = "time", y = "count", title = n)
@@ -113,8 +114,16 @@ def test_periodicity():
 if __name__ == "__main__":
     counts = c_weeklycount()
     c_plotcounts(counts)
+    print("Question C: counts")
+    pprint(counts)
     correls = d_serialcorrel()
+    print("Question D: correls")
+    pprint(correls)
     varvars = e_varvar()
+    print("Question E: var of var")
+    pprint(varvars)
     jbs = f_jb()
+    print("Question F: Jarque-Bera")
+    pprint(jbs)
 
-    IPython.embed()
+
