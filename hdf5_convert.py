@@ -8,7 +8,7 @@ from pathlib import Path
 from loguru import logger
 
 # directory constants
-inH5dir = Path("./data")
+inH5dir = Path("./data/hdf5")
 inH5file = inH5dir / "ES.h5"
 outdir = Path("./data/rawinput")
 

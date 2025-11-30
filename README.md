@@ -2,16 +2,15 @@
 
 ### *MEMORY USAGE*
 This project uses memory mapped arrays for larger than memory data.  
-Tested on Macbook Air 16GB RAM and NixOS 16GB RAM. On Linux requires swapfile of 96GB.  
 
 
-### Usag
-Clone repo  
-`cd adia`  
+### Usage
+Clone repo or unzip   
+`cd ADIA_11_tick`  
 either: install [uv](https://docs.astral.sh/uv/getting-started/installation/) or on nix[os], `nix develop`
-ensure ES.h5 is in the `<project_root>/data/hdf5 directory`  
+ensure ES.h5 is in the `<project_root>/data/hdf5` directory  
 convert to parquet: `uv run hdf5_convert.py`  
-make bars: `uv run main.py`  
+make bars: `uv run barmake.py`  
 answer questions: `uv run qa.py`  
 
 ### Data prep
@@ -28,9 +27,11 @@ Project expects to find exercise data file as `./data/ES.h5`
         * In the same pass as trs creation, dollar volume ("dolvlm") series (volume x price) was added. 
 
 ### Notes
-* Non prod, exploratory, so no type hints in interest of time. 
-* No in-IDE ai assistant. 
-* No thresholds were provided for volume and dollar traded. Volume was chosen as 10k, and dollar traded as the average of over 10k * average of Price
+* used trades_filter0vol dataset
+* Code would probably be faster in imperative style, but opportunity was used to test polars lib speed on disk scan workflows.
+* Non prod, exploratory, so no type hints. 
+* No in-IDE ai assistant.  
+* No thresholds were provided for volume and dollar traded. Used 1h and corresponding averages over 1h for volume, dollars. 
 
 
 
