@@ -34,7 +34,49 @@ Project expects to find exercise data file as `./data/ES.h5`
 
 ### Answers
 * Question c: the hourly bars have the most stable count because they're pre-selected as a fixed time period, whereas the frequency of the others depends on volume of trades (and price).  
-* Rest: `run qa.py`
+* Question d:
+```
+Question D: correls
+{'Dollar': np.float64(-0.015800925371829838),
+ 'Timestamp': np.float64(-0.030008005932149917),
+ 'Volume': np.float64(-0.0063460528150651434)}
+```
+* Question e:
+```
+Question E: var of var
+{'Dollar': shape: (1, 1)
+┌────────────┐
+│ close      │
+│ ---        │
+│ f32        │
+╞════════════╡
+│ 7.3787e-11 │
+└────────────┘,
+ 'Timestamp': shape: (1, 1)
+┌────────────┐
+│ close      │
+│ ---        │
+│ f32        │
+╞════════════╡
+│ 1.8788e-10 │
+└────────────┘,
+ 'Volume': shape: (1, 1)
+┌────────────┐
+│ close      │
+│ ---        │
+│ f32        │
+╞════════════╡
+│ 3.0094e-11 │
+└────────────┘}
+```
+* Question f:
+```
+Question F: Jarque-Bera
+{'Dollar': SignificanceResult(statistic=np.float32(1.5158135e+06), pvalue=np.float32(0.0)),
+ 'Timestamp': SignificanceResult(statistic=np.float32(9.573886e+06), pvalue=np.float32(0.0)),
+ 'Volume': SignificanceResult(statistic=np.float32(408052.44), pvalue=np.float32(0.0))}
+```
+
 * Chart outputs in .png form in ./images directory. 
 
 ### Notes
