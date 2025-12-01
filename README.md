@@ -6,16 +6,16 @@ Tested on Linux and MacOS with 16GB of Ram (Linux: 80GB swap file required).
 
 
 ### Usage
-Clone repo or unzip (https://github.com/vegabook/ADIA_11_tick)   
-`cd ADIA_11_tick`  
-either: install [uv](https://docs.astral.sh/uv/getting-started/installation/) or on nix[os], `nix develop`
+Clone repo or unzip (https://github.com/vegabook/ADIA_11_tick). Change into the project root directory.  
+either: install [uv](https://docs.astral.sh/uv/getting-started/installation/) or if cloning and using nix[os], `nix develop`  
 ensure ES.h5 is in the `<project_root>/data/hdf5` directory  
 either:  
 * convert to parquet: `uv run hdf5_convert.py`  
 * make bars: `uv run barmake.py`  
 * answer questions: `uv run qa.py`  
+
 or:   
-`./runall.sh` (might need to `chmod +x runall.sh` first)
+`./runall.sh` (might need to `chmod +x runall.sh` first)  
 
 ### Data prep
 Project expects to find exercise data file as `./data/ES.h5`
@@ -33,7 +33,7 @@ Project expects to find exercise data file as `./data/ES.h5`
     * Runs all the questions, and writes plots to disk. 
 
 ### Answers
-* Question c: the hourly bars have the most stable count because they're pre-selected as a fixed time period, whereas the frequency of the others depends on volume of trades (and price).  
+* Question c: the hourly bars have the most stable count because they're pre-selected as a fixed time period, whereas the other bar weekly counts depend on volume of trades (and price) which can vary substantially. 
 * Question d:
 ```
 Question D: correls
